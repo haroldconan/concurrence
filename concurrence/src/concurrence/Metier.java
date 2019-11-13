@@ -1,102 +1,102 @@
 package concurrence;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class Metier {
+public class Metier implements Runnable {
+	private int id;
+	private final Object obj;
+	private final List<String> FILE_EXTENSION = Arrays.asList("php", "html", "htm");
 
-	private static volatile HashSet<String> txtVue = new HashSet<>();
-	private static volatile HashSet<Object> AttenteList = new HashSet<>();
-	private static volatile HashSet<String> resteFaire = new HashSet<>();
-	private static ReentrantReadWriteLock txtVueLock = new ReentrantReadWriteLock();
-	private static ReentrantReadWriteLock resteFaireLock = new ReentrantReadWriteLock();
-	private static ReentrantReadWriteLock AttenteListLock = new ReentrantReadWriteLock();
-	
-	
-	static volatile AtomicInteger count = new AtomicInteger(0);
-	static AtomicInteger workers = new AtomicInteger(0);
-	static String search;
-	
-	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub http://localhost:8080/td.web/page1.jsp
-		if(args.length>=1){
-			search=args[0];
-			resteFaire.add(args[1]);
-		      
-		   }
-		ExecutorService es = Executors.newCachedThreadPool();
-		for (int i = 0; i < 2; i++)
-			es.execute(new ThreadsConcurrence());
-		es.shutdown();
-		try {
-			es.awaitTermination(1, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("VISITED : " + txtVue);
-		System.out.println("COUNT : " + count);
-
-	}
-	private static boolean isVisited(String url) {
-		txtVueLock.readLock().lock();
-		boolean result = txtVue.contains(url);
-		txtVueLock.readLock().unlock();
-		return result;
+	Metier() {
+		id = new Random().nextInt(1000 + 1);
+		obj = new Object();
 	}
 
-	private static void addVisited(String url) {
-		txtVueLock.writeLock().lock();
-		txtVue.add(url);
-		txtVueLock.writeLock().unlock();
-	}
-
-	static String getTodo() {
-		resteFaireLock.writeLock().lock();
-		String result = null;
-		if (stillTodo()) {
-			result = resteFaire.iterator().next();
-			resteFaire.remove(result);
-			addVisited(result);
-		}
-		resteFaireLock.writeLock().unlock();
-		return result;
-	}
-
-	static void addTodo(String url) {
-		resteFaireLock.writeLock().lock();
-		if (!isVisited(url))
-			resteFaire.add(url);
-		resteFaireLock.writeLock().unlock();
-	}
-
-	static boolean stillTodo() {
-		resteFaireLock.readLock().lock();
-		boolean result = resteFaire.size() > 0;
-		resteFaireLock.readLock().unlock();
-		return result;
-	}
-
-	static void addWaitingList(Object object) {
-		AttenteListLock.writeLock().lock();
-		AttenteList.add(object);
-		AttenteListLock.writeLock().unlock();
-	}
-
-	static void notifyWaitingList() {
-		AttenteListLock.writeLock().lock();
-		for (Object object : AttenteList) {
-			synchronized (object) {
-				object.notify();
+	@Override
+	public void run() {
+		while (Main.encoreFaire() || Main.workers.get() > 0) {
+			if (Main.encoreFaire()) {
+				String strURL = Main.getResteFaire();
+				if (strURL != null) {
+					Main.workers.incrementAndGet();
+					System.out.println("id = "+id + " : " + strURL);
+					try {
+						URL url = new URL(strURL);
+						try {
+							BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+							String inputLine;
+							Pattern patternSearch = Pattern.compile(Main.search);
+							Pattern patternLink = Pattern.compile("href=\"([^\"]*)\"", Pattern.DOTALL);
+							Matcher matcherSearch;
+							Matcher matcherLink;
+							int count = 0;
+							HashSet<String> resteFaire = new HashSet<>();
+							while ((inputLine = in.readLine()) != null) {
+								matcherSearch = patternSearch.matcher(inputLine);
+								matcherLink = patternLink.matcher(inputLine);
+								while (matcherSearch.find())
+									count++;
+								if (matcherLink.find()) {
+									String groupStr = matcherLink.group(1);
+									try {
+										URL currentURL;
+										if (groupStr.substring(0, 1).equals("/")) {
+											currentURL = new URL(url.getProtocol() + "://" + url.getHost() + groupStr);
+										} else
+											currentURL = new URL(groupStr);
+										String fileName = currentURL.getFile();
+										int i = fileName.lastIndexOf(".");
+										if (i > 0) {
+											String fileExtension = fileName.substring(i + 1);
+											if (FILE_EXTENSION.contains(fileExtension)) {
+												resteFaire.add(currentURL.toString());
+											}
+										} else {
+											resteFaire.add(currentURL.toString());
+										}
+									} catch (Exception ignored) {
+									}
+								}
+							}
+							if (count != 0) {
+								for (String tmpURL : resteFaire) {
+									Main.ajouterResteFaire(tmpURL);
+									Main.notifyListAttente();
+								}
+								Main.count.addAndGet(count);
+							}
+							in.close();
+							
+						} catch (Exception e) {
+							System.out.println("Erreur lors de la lecture : \n" + e.getMessage());
+						}finally {
+							Main.workers.decrementAndGet();
+						}
+					} catch (MalformedURLException e) {
+						Main.workers.decrementAndGet();
+					}
+				}
+			} else {
+				try {
+					System.out.println("id = "+id + " est en attente");
+					synchronized (obj) {
+						Main.ajouterListAttente(obj);
+						obj.wait();
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
-			AttenteList.remove(object);
 		}
-		AttenteListLock.writeLock().unlock();
+		Main.notifyListAttente();
 	}
-
 }
