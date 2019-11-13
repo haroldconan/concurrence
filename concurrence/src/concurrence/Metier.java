@@ -15,7 +15,8 @@ public class Metier implements Runnable {
 	private int id;
 	private final Object obj;
 	private final List<String> FILE_EXTENSION = Arrays.asList("php", "html", "htm");
-	private Methodes methodes;
+	@SuppressWarnings("unused")
+	private Methodes methodes; 
 
 	Metier(HashSet<String> resteFaire) {
 		id = new Random().nextInt(1000 + 1);
