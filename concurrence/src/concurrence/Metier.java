@@ -15,17 +15,19 @@ public class Metier implements Runnable {
 	private int id;
 	private final Object obj;
 	private final List<String> FILE_EXTENSION = Arrays.asList("php", "html", "htm");
+	private Methodes methodes;
 
-	Metier() {
+	Metier(HashSet<String> resteFaire) {
 		id = new Random().nextInt(1000 + 1);
 		obj = new Object();
+		methodes =new Methodes(resteFaire);
 	}
 
 	@Override
 	public void run() {
-		while (Main.encoreFaire() || Main.workers.get() > 0) {
-			if (Main.encoreFaire()) {
-				String strURL = Main.getResteFaire();
+		while (Methodes.encoreFaire() || Main.workers.get() > 0) {
+			if (Methodes.encoreFaire()) {
+				String strURL = Methodes.getResteFaire();
 				if (strURL != null) {
 					Main.workers.incrementAndGet();
 					System.out.println("id = "+id + " : " + strURL);
@@ -69,8 +71,8 @@ public class Metier implements Runnable {
 							}
 							if (count != 0) {
 								for (String tmpURL : resteFaire) {
-									Main.ajouterResteFaire(tmpURL);
-									Main.notifyListAttente();
+									Methodes.ajouterResteFaire(tmpURL);
+									Methodes.notifyListAttente();
 								}
 								Main.count.addAndGet(count);
 							}
@@ -89,7 +91,7 @@ public class Metier implements Runnable {
 				try {
 					System.out.println("id = "+id + " est en attente");
 					synchronized (obj) {
-						Main.ajouterListAttente(obj);
+						Methodes.ajouterListAttente(obj);
 						obj.wait();
 					}
 				} catch (InterruptedException e) {
@@ -97,6 +99,6 @@ public class Metier implements Runnable {
 				}
 			}
 		}
-		Main.notifyListAttente();
+		Methodes.notifyListAttente();
 	}
 }
