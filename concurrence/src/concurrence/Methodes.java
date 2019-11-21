@@ -16,7 +16,7 @@ public class Methodes {
 	public Methodes(HashSet<String> r) {
 		super();
 		// TODO Auto-generated constructor stub
-		resteFaire = r;
+		resteFaire = r;//
 	}
 
 	static String getResteFaire() {
