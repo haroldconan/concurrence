@@ -32,6 +32,7 @@ public class Metier implements Runnable {
 				if (strURL != null) {
 					Main.workers.incrementAndGet();
 					System.out.println("id = "+id + " : " + strURL);
+					
 					try {
 						URL url = new URL(strURL);
 						try {
@@ -66,6 +67,7 @@ public class Metier implements Runnable {
 										} else {
 											resteFaire.add(currentURL.toString());
 										}
+										
 									} catch (Exception ignored) {
 									}
 								}
@@ -78,7 +80,7 @@ public class Metier implements Runnable {
 								Main.count.addAndGet(count);
 							}
 							in.close();
-							
+							System.out.println("Le mot"+ Main.search + "est trouvé "+count + " fois sur ce site");
 						} catch (Exception e) {
 							System.out.println("Erreur lors de la lecture : \n" + e.getMessage());
 						}finally {

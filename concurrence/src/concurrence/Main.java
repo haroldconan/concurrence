@@ -20,11 +20,9 @@ public class Main {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub http://localhost:8080/td.web/page1.jsp
-		if(args.length>=1){
-			search=args[0];
-			resteFaire.add(args[1]);
-		      
-		   }
+	
+			search="nantes";
+			resteFaire.add("https://fr.wikipedia.org/wiki/Nantes");
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		for (int i = 0; i < 2; i++)
 			executorService.execute(new Metier(resteFaire));
