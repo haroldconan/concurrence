@@ -15,40 +15,49 @@ public class Main {
 	
 	static volatile AtomicInteger count = new AtomicInteger(0);
 	static AtomicInteger workers = new AtomicInteger(0);
-	static String search;
+	static String motChercher;
 	
 	
+	/**Point d'entrée du programme
+	 * @param args
+	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub http://localhost:8080/td.web/page1.jsp
-	
-			search="nantes";
+			motChercher="nantes";
 			resteFaire.add("https://fr.wikipedia.org/wiki/Nantes");
-		ExecutorService executorService = Executors.newCachedThreadPool();
+		ExecutorService executorService = Executors.newCachedThreadPool();//un récupère les tâches en cours
 		for (int i = 0; i < 2; i++)
-			executorService.execute(new Metier(resteFaire));
-		executorService.shutdown();
+			executorService.execute(new Metier(resteFaire));//on execute la tâche à faire
+		executorService.shutdown();//on la tue
 		try {
-			executorService.awaitTermination(1, TimeUnit.MINUTES);
+			executorService.awaitTermination(1, TimeUnit.MINUTES);//on donne une 1 minutes de vie max à la tâche
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("\n======================================================================================\n");
-		System.out.println("\t\tle texte "+search+" a Ã©tÃ© trouvÃ© "+count+" fois Ã  l'adresse:\n\t\t" + txtVue);
+		System.out.println("\t\tle texte "+motChercher+" a été trouvé "+count+" fois");
 		System.out.println("\n======================================================================================\n");
 
 	}
+	/**
+	 * Méthode qui permet de dire si le lien courant est dans l'url :
+	 * @param url
+	 * @return
+	 */
 	static boolean trouvee(String url) {
-		txtVueLock.readLock().lock();
-		boolean result = txtVue.contains(url);
-		txtVueLock.readLock().unlock();
+		txtVueLock.readLock().lock();//on bloque le thread
+		boolean result = txtVue.contains(url);//si le lien à déjà était visité
+		txtVueLock.readLock().unlock();//on deboque le thread
 		return result;
 	}
 
+	/**Méthode qui ajoute l'url trouvée à la liste de celles qui sont déjà lue
+	 * @param url
+	 */
 	static void ajouterTxtTrouvee(String url) {
-		txtVueLock.writeLock().lock();
-		txtVue.add(url);
-		txtVueLock.writeLock().unlock();
+		txtVueLock.writeLock().lock();//on bloque le thread
+		txtVue.add(url);//on ajout l'url trouvée
+		txtVueLock.writeLock().unlock();//on deboque le thread
 	}
 	
 
