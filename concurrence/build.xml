@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="concurrence" default="execute" basedir=".">
+	<description>
+       Concurrence, lecture de tous les lien comportant le mot "nantes" et compteur du nombre de fois que ce mot est trouvé
+   </description>
+
+	<property name="src" value="${basedir}/src" />
+	<property name="build" value="${basedir}/build" />
+
+	<target name="init" description="construit l'arborescence cible">
+		<mkdir dir="${build}" />
+		<mkdir dir="${build}/classes" />
+	</target>
+	<target name="compil" depends="init" description="compile les sources">
+		<javac srcdir="${src}" executable="true" includeantruntime="false" destdir="${build}/classes">
+			<classpath path="${build}/classes"/>
+		</javac>
+	</target>
+	<target name="main" depends="compil" description="génère l'archive">
+		<jar jarfile="${build}/concurrence.jar" basedir="${build}/classes">
+			<manifest>
+				<attribute name="Main-Class" value="com.tp.concurrence.Main" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+		</jar>
+	</target>
+	<target name="execute" depends="main">
+		<java jar="${build}/concurrence.jar" fork="true" />
+	</target>
+	<target name="clean" description="nettoie tous les répertoires générés">
+		<delete includeEmptyDirs="true">
+			<fileset dir="${build}/*" />
+		</delete>
+	</target>
+</project>

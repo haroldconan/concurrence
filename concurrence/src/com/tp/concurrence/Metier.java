@@ -1,4 +1,4 @@
-package concurrence;
+package com.tp.concurrence;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

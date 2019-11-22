@@ -1,4 +1,4 @@
-package concurrence;
+package com.tp.concurrence;
 
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
